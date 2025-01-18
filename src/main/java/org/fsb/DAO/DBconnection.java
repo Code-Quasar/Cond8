@@ -4,34 +4,36 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class DBconnection {
-    public static void main(String[] args) {
 
-        Dotenv dotenv = Dotenv.load();
+    private static Connection connexion;
+    Dotenv dotenv = Dotenv.load();
 
-        String url = dotenv.get("DB_URL");
-        String username = dotenv.get("DB_USERNAME");
-        String password = dotenv.get("DB_PASSWORD");
+    private final String DB_URL = dotenv.get("DB_URL");
+    private final String USER = dotenv.get("USER");
+    private final String PASS = dotenv.get("PASS");
 
-        System.out.println(url + username + password);
+    private DBconnection() throws SQLException{
 
-        String query = "SELECT * FROM test";
+        try{
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement(query);
-             ResultSet resultSet = statement.executeQuery()) {
-
-            System.out.println("Connected to the database!");
-
-            while (resultSet.next()) {
-                System.out.println("Column 1: " + resultSet.getString(1)); // Replace with actual column name or index
-                System.out.println("Column 2: " + resultSet.getString(2)); // Replace with actual column name or index
-            }
-        } catch (Exception e) {
             e.printStackTrace();
         }
+        assert DB_URL != null;
+        connexion= DriverManager.getConnection(DB_URL, USER, PASS);
+    }
+
+    public static Connection getInstance(){
+        if (connexion == null)
+            try {
+                new DBconnection();
+            }catch(Exception e){
+                System.out.println("--"+e.getMessage());
+            }
+        return connexion;
     }
 }
